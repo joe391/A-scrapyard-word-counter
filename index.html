@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>A Scrapyard Word Counter</title>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f8f9fa;
+      color: #343a40;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      text-align: center;
+    }
+    .container {
+      background-color: #ffffff;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      border-radius: 12px;
+      width: 90%;
+      max-width: 700px;
+      padding: 40px;
+      box-sizing: border-box;
+    }
+    h1 {
+      font-size: 28px;
+      color: #007bff;
+      margin-bottom: 20px;
+    }
+    #paragraph {
+      font-size: 18px;
+      color: #495057;
+      margin-bottom: 20px;
+      line-height: 1.6;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      font-weight: 500;
+    }
+    #inputField {
+      width: 100%;
+      height: 120px;
+      font-size: 18px;
+      padding: 15px;
+      margin-bottom: 20px;
+      border: 2px solid #ced4da;
+      border-radius: 8px;
+      box-sizing: border-box;
+      resize: none;
+      background-color: #f1f3f5;
+      color: #495057;
+      transition: all 0.3s ease;
+    }
+    #inputField:focus {
+      border-color: #007bff;
+      background-color: #ffffff;
+      outline: none;
+    }
+    #counter {
+      font-size: 22px;
+      color: #007bff;
+      font-weight: 500;
+    }
+    .correct {
+      color: #28a745;
+      font-weight: bold;
+    }
+    .incorrect {
+      color: #6c757d;
+      font-weight: bold;
+    }
+    .button {
+      background-color: #007bff;
+      color: white;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 5px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+      margin-top: 20px;
+    }
+    .button:hover {
+      background-color: #0056b3;
+    }
+    .footer {
+      font-size: 14px;
+      color: #6c757d;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Typing Challenge: Scrapyard Words Per Minute</h1>
+  <p id="paragraph">I can can the can but the can can't can me.</p>
+  <textarea id="inputField" placeholder="Start typing the paragraph above..."></textarea>
+  <div id="counter">Words per minute: 0</div>
+  <button class="button" onclick="resetGame()">Reset</button>
+  <p class="footer">Challenge yourself to type faster and more accurately with A Scrapyard words!</p>
+</div>
+
+<script>
+  const paragraph = document.getElementById('paragraph');
+  const inputField = document.getElementById('inputField');
+  const counter = document.getElementById('counter');
+
+  let wordsTyped = 0;
+  let startTime = null;
+  let wordList = paragraph.innerText.split(' ');
+
+  // Function to calculate words per minute
+  function updateWordsPerMinute() {
+    if (startTime === null) return;
+    let timePassed = (new Date() - startTime) / 60000; // in minutes
+    wordsTyped = inputField.value.split(/\s+/).length;
+    let wpm = Math.round(wordsTyped / timePassed);
+    counter.innerText = `Words per minute: ${wpm}`;
+  }
+
+  // Function to randomly replace characters in the input text
+  function randomizeInput(input) {
+    const letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let randomizedInput = '';
+    for (let char of input) {
+      if (Math.random() > 0.7) { // 30% chance to replace a character
+        const randomChar = letters.charAt(Math.floor(Math.random() * letters.length));
+        randomizedInput += randomChar;
+      } else {
+        randomizedInput += char;
+      }
+    }
+    return randomizedInput;
+  }
+
+  // Function to randomly replace an entire word with a completely random word
+  function randomizeWord(word) {
+    const letters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    let randomWord = '';
+    for (let i = 0; i < word.length; i++) {
+      randomWord += letters.charAt(Math.floor(Math.random() * letters.length));
+    }
+    return randomWord;
+  }
+
+  // Function to check the typed text and highlight words
+  function checkInput() {
+    const typedWords = inputField.value.split(/\s+/);
+    let checkedText = '';
+
+    typedWords.forEach((word, index) => {
+      const originalWord = wordList[index] || '';
+      const randomizedWord = randomizeInput(word); // Apply randomization to each character in the word
+
+      // Randomly replace entire word with a new random word (20% chance)
+      const finalWord = Math.random() > 0.8 ? randomizeWord(word) : randomizedWord;
+
+      if (originalWord === word) {
+        checkedText += `<span class="correct">${finalWord}</span> `;
+      } else {
+        checkedText += `<span class="incorrect">${finalWord}</span> `;
+      }
+    });
+
+    // Highlight remaining words that have not been typed yet
+    for (let i = typedWords.length; i < wordList.length; i++) {
+      checkedText += `<span class="incorrect">${wordList[i]}</span> `;
+    }
+
+    paragraph.innerHTML = checkedText;
+  }
+
+  // Add event listener to the input field
+  inputField.addEventListener('input', () => {
+    if (!startTime) {
+      startTime = new Date(); // Start the timer when the user starts typing
+    }
+    checkInput();
+    updateWordsPerMinute();
+  });
+
+  // Reset the game (clear the input field and reset the counter)
+  function resetGame() {
+    inputField.value = '';
+    paragraph.innerHTML = wordList.join(' ');
+    counter.innerText = 'Words per minute: 0';
+    startTime = null;
+    wordsTyped = 0;
+  }
+</script>
+
+</body>
+</html>
